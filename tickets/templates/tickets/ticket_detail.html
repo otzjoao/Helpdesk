@@ -1,0 +1,44 @@
+{% extends "tickets/base.html" %}
+{% block title %}Chamado #{{ ticket.pk }}{% endblock %}
+{% block content %}
+    <h1>#{{ ticket.pk }} {{ ticket.title }}</h1>
+    <p>
+        <span class="badge">{{ ticket.get_status_display }}</span>
+        Prioridade: {{ ticket.get_priority_display }} |
+        Categoria: {{ ticket.category }} |
+        Solicitante: {{ ticket.requester }} |
+        Responsável: {{ ticket.assignee|default_if_none:"-" }}
+    </p>
+    <p>{{ ticket.description|linebreaks }}</p>
+
+    {% if is_agent %}
+        <h2>Atendimento</h2>
+        <form method="post" action="{% url 'tickets:assign' ticket.pk %}"
+              style="display:inline">
+            {% csrf_token %}
+            <button type="submit">Assumir chamado</button>
+        </form>
+        <form method="post" action="{% url 'tickets:manage' ticket.pk %}">
+            {% csrf_token %}
+            {{ manage_form.as_p }}
+            <button type="submit">Salvar alterações</button>
+        </form>
+    {% endif %}
+
+    <h2>Conversa</h2>
+    {% for c in comments %}
+        <div class="comment {% if c.internal %}internal{% endif %}">
+            <strong>{{ c.author }}</strong> - {{ c.created_at|date:"d/m/Y H:i" }}
+            {% if c.internal %}<em>(nota interna)</em>{% endif %}
+            {{ c.body|linebreaks }}
+        </div>
+    {% empty %}
+        <p>Ainda sem mensagens.</p>
+    {% endfor %}
+
+    <form method="post" action="{% url 'tickets:comment' ticket.pk %}">
+        {% csrf_token %}
+        {{ comment_form.as_p }}
+        <button type="submit">Enviar</button>
+    </form>
+{% endblock %}

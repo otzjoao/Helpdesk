@@ -1,0 +1,45 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+    <h1>Chamados</h1>
+
+    <p>
+        Filtrar:
+        <a href="{% url 'tickets:list' %}">Todos</a>
+        {% for value, label in statuses %}
+            | <a href="?status={{ value }}">{{ label }}</a>
+        {% endfor %}
+        {% if is_agent %}| <a href="?mine=1">Meus</a>{% endif %}
+    </p>
+
+    <table>
+        <tr>
+            <th>#</th><th>Título</th><th>Status</th>
+            <th>Prioridade</th><th>Responsável</th>
+        </tr>
+        {% for t in tickets %}
+            <tr>
+                <td>{{ t.pk }}</td>
+                <td><a href="{% url 'tickets:detail' t.pk %}">{{ t.title }}</a></td>
+                <td><span class="badge">{{ t.get_status_display }}</span></td>
+                <td>{{ t.get_priority_display }}</td>
+                <td>{{ t.assignee|default_if_none:"-" }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5">Nenhum chamado encontrado.</td></tr>
+        {% endfor %}
+    </table>
+
+    {% if is_paginated %}
+        <p>
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&status={{ current_status }}">
+                    Anterior</a>
+            {% endif %}
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&status={{ current_status }}">
+                    Próxima</a>
+            {% endif %}
+        </p>
+    {% endif %}
+{% endblock %}
