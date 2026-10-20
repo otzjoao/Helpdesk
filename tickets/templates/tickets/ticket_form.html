@@ -1,9 +1,17 @@
 {% extends "tickets/base.html" %}
+{% block title %}Novo chamado{% endblock %}
 {% block content %}
-    <h1>Novo chamado</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Abrir chamado</button>
-    </form>
+    <div class="narrow">
+        <a class="back" href="{% url 'tickets:list' %}">Voltar para a lista</a>
+        <h1>Novo chamado</h1>
+        <p class="muted">Descreva o problema com o máximo de detalhes. O prazo de atendimento depende da prioridade.</p>
+        <div class="card pad">
+            <form method="post" class="form">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn">Abrir chamado</button>
+                <a class="btn secondary" href="{% url 'tickets:list' %}">Cancelar</a>
+            </form>
+        </div>
+    </div>
 {% endblock %}

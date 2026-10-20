@@ -1,44 +1,102 @@
 {% extends "tickets/base.html" %}
 {% block title %}Chamado #{{ ticket.pk }}{% endblock %}
 {% block content %}
-    <h1>#{{ ticket.pk }} {{ ticket.title }}</h1>
-    <p>
-        <span class="badge">{{ ticket.get_status_display }}</span>
-        Prioridade: {{ ticket.get_priority_display }} |
-        Categoria: {{ ticket.category }} |
-        Solicitante: {{ ticket.requester }} |
-        Responsável: {{ ticket.assignee|default_if_none:"-" }}
-    </p>
-    <p>{{ ticket.description|linebreaks }}</p>
+    <a class="back" href="{% url 'tickets:list' %}">Voltar para a lista</a>
 
-    {% if is_agent %}
-        <h2>Atendimento</h2>
-        <form method="post" action="{% url 'tickets:assign' ticket.pk %}"
-              style="display:inline">
-            {% csrf_token %}
-            <button type="submit">Assumir chamado</button>
-        </form>
-        <form method="post" action="{% url 'tickets:manage' ticket.pk %}">
-            {% csrf_token %}
-            {{ manage_form.as_p }}
-            <button type="submit">Salvar alterações</button>
-        </form>
-    {% endif %}
-
-    <h2>Conversa</h2>
-    {% for c in comments %}
-        <div class="comment {% if c.internal %}internal{% endif %}">
-            <strong>{{ c.author }}</strong> - {{ c.created_at|date:"d/m/Y H:i" }}
-            {% if c.internal %}<em>(nota interna)</em>{% endif %}
-            {{ c.body|linebreaks }}
+    <div class="page-head">
+        <div>
+            <h1>{{ ticket.title }} <span class="muted">#{{ ticket.pk }}</span></h1>
+            <div class="badges">
+                <span class="badge status-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
+                <span class="badge prio-{{ ticket.priority }}">Prioridade {{ ticket.get_priority_display|lower }}</span>
+                {% if ticket.is_overdue %}<span class="badge late">Atrasado</span>{% endif %}
+            </div>
         </div>
-    {% empty %}
-        <p>Ainda sem mensagens.</p>
-    {% endfor %}
+    </div>
 
-    <form method="post" action="{% url 'tickets:comment' ticket.pk %}">
-        {% csrf_token %}
-        {{ comment_form.as_p }}
-        <button type="submit">Enviar</button>
-    </form>
+    <div class="layout">
+        <section>
+            <div class="card pad">
+                <h2>Descrição</h2>
+                {{ ticket.description|linebreaks }}
+            </div>
+
+            <div class="card pad">
+                <h2>Conversa</h2>
+                {% for c in comments %}
+                    <article class="comment {% if c.internal %}internal{% endif %}">
+                        <span class="avatar">{{ c.author.get_username|slice:":1"|upper }}</span>
+                        <div class="comment-body">
+                            <div class="comment-meta">
+                                <strong>{{ c.author }}</strong> · {{ c.created_at|date:"d/m/Y H:i" }}
+                                {% if c.internal %}<span class="tag-internal">nota interna</span>{% endif %}
+                            </div>
+                            {{ c.body|linebreaks }}
+                        </div>
+                    </article>
+                {% empty %}
+                    <p class="muted">Ainda sem mensagens.</p>
+                {% endfor %}
+
+                <form method="post" action="{% url 'tickets:comment' ticket.pk %}" class="form reply">
+                    {% csrf_token %}
+                    {{ comment_form.as_p }}
+                    <button type="submit" class="btn">Enviar</button>
+                </form>
+            </div>
+        </section>
+
+        <aside class="side">
+            <div class="card pad">
+                <h2>Detalhes</h2>
+                <dl class="dl">
+                    <dt>Categoria</dt><dd>{{ ticket.category }}</dd>
+                    <dt>Solicitante</dt><dd>{{ ticket.requester }}</dd>
+                    <dt>Responsável</dt><dd>{{ ticket.assignee|default_if_none:"-" }}</dd>
+                    <dt>Aberto em</dt><dd>{{ ticket.created_at|date:"d/m/Y H:i" }}</dd>
+                    <dt>Prazo (SLA)</dt><dd>{{ ticket.due_at|date:"d/m/Y H:i" }}</dd>
+                </dl>
+                {% if ticket.is_overdue %}
+                    <p class="small" style="margin-top:10px; color: var(--danger);">
+                        Atrasado há {{ ticket.due_at|timesince }}.
+                    </p>
+                {% elif ticket.status != 'resolved' and ticket.status != 'closed' %}
+                    <p class="muted small" style="margin-top:10px;">
+                        Vence em {{ ticket.due_at|timeuntil }}.
+                    </p>
+                {% endif %}
+            </div>
+
+            {% if is_agent %}
+                <div class="card pad">
+                    <h2>Atendimento</h2>
+                    <form method="post" action="{% url 'tickets:assign' ticket.pk %}" class="actions-row">
+                        {% csrf_token %}
+                        <button type="submit" class="btn secondary block">Assumir chamado</button>
+                    </form>
+                    <form method="post" action="{% url 'tickets:manage' ticket.pk %}" class="form">
+                        {% csrf_token %}
+                        {{ manage_form.as_p }}
+                        <button type="submit" class="btn block">Salvar alterações</button>
+                    </form>
+                </div>
+            {% endif %}
+
+            <div class="card pad">
+                <h2>Histórico</h2>
+                <ol class="timeline">
+                    {% for e in events %}
+                        <li>
+                            {{ e.description }}
+                            <div class="muted small">
+                                {{ e.created_at|date:"d/m/Y H:i" }} · {{ e.actor|default_if_none:"sistema" }}
+                            </div>
+                        </li>
+                    {% empty %}
+                        <li class="muted">Sem eventos registrados.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </aside>
+    </div>
 {% endblock %}

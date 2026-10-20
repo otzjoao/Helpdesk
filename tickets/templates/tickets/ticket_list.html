@@ -1,45 +1,80 @@
 {% extends "tickets/base.html" %}
+{% block title %}Chamados{% endblock %}
 {% block content %}
-    <h1>Chamados</h1>
+    <div class="page-head">
+        <div>
+            <h1>Chamados</h1>
+            <p class="muted">{{ page_obj.paginator.count }} encontrado(s)</p>
+        </div>
+        <a class="btn" href="{% url 'tickets:create' %}">Novo chamado</a>
+    </div>
 
-    <p>
-        Filtrar:
-        <a href="{% url 'tickets:list' %}">Todos</a>
+    <div class="chips">
+        <a class="chip {% if not active_filter %}active{% endif %}"
+           href="{% url 'tickets:list' %}">Todos</a>
         {% for value, label in statuses %}
-            | <a href="?status={{ value }}">{{ label }}</a>
+            <a class="chip {% if active_filter == value %}active{% endif %}"
+               href="?status={{ value }}">{{ label }}</a>
         {% endfor %}
-        {% if is_agent %}| <a href="?mine=1">Meus</a>{% endif %}
-    </p>
+        <a class="chip {% if active_filter == 'atrasados' %}active{% endif %}"
+           href="?atrasados=1">Atrasados</a>
+        {% if is_agent %}
+            <a class="chip {% if active_filter == 'mine' %}active{% endif %}"
+               href="?mine=1">Meus</a>
+        {% endif %}
+    </div>
 
-    <table>
-        <tr>
-            <th>#</th><th>Título</th><th>Status</th>
-            <th>Prioridade</th><th>Responsável</th>
-        </tr>
-        {% for t in tickets %}
-            <tr>
-                <td>{{ t.pk }}</td>
-                <td><a href="{% url 'tickets:detail' t.pk %}">{{ t.title }}</a></td>
-                <td><span class="badge">{{ t.get_status_display }}</span></td>
-                <td>{{ t.get_priority_display }}</td>
-                <td>{{ t.assignee|default_if_none:"-" }}</td>
-            </tr>
-        {% empty %}
-            <tr><td colspan="5">Nenhum chamado encontrado.</td></tr>
-        {% endfor %}
-    </table>
+    <div class="card table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th><th>Título</th><th>Status</th>
+                    <th>Prioridade</th><th>Prazo</th><th>Responsável</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in tickets %}
+                    <tr>
+                        <td class="muted">#{{ t.pk }}</td>
+                        <td>
+                            <a class="title-link" href="{% url 'tickets:detail' t.pk %}">{{ t.title }}</a>
+                            <div class="muted small">{{ t.category }} · {{ t.requester }}</div>
+                        </td>
+                        <td><span class="badge status-{{ t.status }}">{{ t.get_status_display }}</span></td>
+                        <td><span class="badge prio-{{ t.priority }}">{{ t.get_priority_display }}</span></td>
+                        <td>
+                            {{ t.due_at|date:"d/m H:i" }}
+                            {% if t.is_overdue %}<span class="badge late">Atrasado</span>{% endif %}
+                        </td>
+                        <td class="nowrap">
+                            {% if t.assignee %}
+                                <span class="person">
+                                    <span class="avatar">{{ t.assignee.get_username|slice:":1"|upper }}</span>
+                                    {{ t.assignee }}
+                                </span>
+                            {% else %}
+                                <span class="muted">Sem responsável</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6" class="empty">Nenhum chamado encontrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     {% if is_paginated %}
-        <p>
+        <nav class="pagination">
             {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}&status={{ current_status }}">
-                    Anterior</a>
+                <a class="btn secondary small"
+                   href="{% querystring page=page_obj.previous_page_number %}">Anterior</a>
             {% endif %}
-            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}&status={{ current_status }}">
-                    Próxima</a>
+                <a class="btn secondary small"
+                   href="{% querystring page=page_obj.next_page_number %}">Próxima</a>
             {% endif %}
-        </p>
+        </nav>
     {% endif %}
 {% endblock %}

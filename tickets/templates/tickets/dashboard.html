@@ -1,0 +1,58 @@
+{% extends "tickets/base.html" %}
+{% block title %}Painel{% endblock %}
+{% block content %}
+    <div class="page-head">
+        <div>
+            <h1>Painel</h1>
+            <p class="muted">Visão geral da fila de atendimento.</p>
+        </div>
+        <a class="btn secondary" href="{% url 'tickets:list' %}">Ver chamados</a>
+    </div>
+
+    <div class="stats">
+        <div class="card stat"><strong>{{ total }}</strong><span>Total de chamados</span></div>
+        <div class="card stat"><strong>{{ open_total }}</strong><span>Em andamento</span></div>
+        <div class="card stat {% if overdue %}alert-card{% endif %}">
+            <strong>{{ overdue }}</strong>
+            <a href="{% url 'tickets:list' %}?atrasados=1">Atrasados</a>
+        </div>
+        <div class="card stat"><strong>{{ unassigned }}</strong><span>Sem responsável</span></div>
+    </div>
+
+    <div class="grid-3">
+        <div class="card pad">
+            <h2>Por status</h2>
+            {% for label, n in status_rows %}
+                <div class="bar-row">
+                    <span class="bar-label">{{ label }}</span>
+                    <div class="bar"><span style="width: {% widthratio n status_max 100 %}%"></span></div>
+                    <span class="bar-n">{{ n }}</span>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="card pad">
+            <h2>Em andamento por prioridade</h2>
+            {% for label, n in priority_rows %}
+                <div class="bar-row">
+                    <span class="bar-label">{{ label }}</span>
+                    <div class="bar"><span style="width: {% widthratio n priority_max 100 %}%"></span></div>
+                    <span class="bar-n">{{ n }}</span>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="card pad">
+            <h2>Em andamento por responsável</h2>
+            {% for name, n in agent_rows %}
+                <div class="bar-row">
+                    <span class="bar-label">{{ name }}</span>
+                    <div class="bar"><span style="width: {% widthratio n agent_max 100 %}%"></span></div>
+                    <span class="bar-n">{{ n }}</span>
+                </div>
+            {% empty %}
+                <p class="muted">Nenhum chamado em andamento.</p>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
