@@ -2,8 +2,8 @@
 
 **Disciplina:** Programação Web / Desenvolvimento de Sistemas  
 **Projeto:** Help Desk — Sistema de Chamados em Django  
-**Integrantes:** Gustavo dos Santos Guimarães (114.049), Vinicius Durau Ferreira (114.125), Ryan Soler de Lima de Souza (114.038), João Victor dos Santos Ortiz (114.055)  
-**Data:** Novembro 2025
+**Integrantes:**Vinicius Durau Ferreira (114.125), Ryan Soler de Lima de Souza (114.038), João Victor dos Santos Ortiz (114.055)  
+**Data:** Novembro de 2026
 
 ---
 
